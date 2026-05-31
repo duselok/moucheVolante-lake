@@ -1,20 +1,20 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mouche Volante â€“ Daylight</title>
+  <title>Mouche Volante – Daylight</title>
   <!-- Preload kritisches Hintergrundbild SOFORT, parallel zum HTML-Parsing -->
   <link rel="preload" as="image" href="bg-lake-pov.png" fetchpriority="high" />
-  <!-- p5.js LOKAL gehostet (war CDN cdnjs) â€“ kein externer HÃ¤nger mehr,
+  <!-- p5.js LOKAL gehostet (war CDN cdnjs) – kein externer Hänger mehr,
        dieselbe Origin wie alles andere, kein DNS/TLS/Cold-Start-Risiko. -->
   <script src="p5.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; }
-    /* Hintergrund: deutlich grÃ¶ÃŸer als Viewport, damit Parallax-Schwenk
-       NIEMALS den weiÃŸen Editor-Hintergrund am Rand zeigt.
+    /* Hintergrund: deutlich größer als Viewport, damit Parallax-Schwenk
+       NIEMALS den weißen Editor-Hintergrund am Rand zeigt.
        140vw/140vh + -20vw/-20vh = 20vw Reserve in jede Richtung,
-       Parallax bewegt sich max Â±12vw â†’ bleibt klar innerhalb. */
+       Parallax bewegt sich max ±12vw → bleibt klar innerhalb. */
     #bg {
       position: fixed; z-index: 0;
       width: 140vw; height: 140vh;
@@ -42,4 +42,3 @@
   <script src="mouche-volante.js"></script>
 </body>
 </html>
-
