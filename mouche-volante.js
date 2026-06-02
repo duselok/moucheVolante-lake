@@ -56,8 +56,8 @@ const FLOATER_EASE       = 0.08;
 
 /* Fleck als Mini-Superfleck (lokal am Floater) – RESET auf Referenz */
 const FLECK_SUPER_SIZE      = 44;
-const FLECK_SUPER_TINT      = [12,12,18];           // dunkler
-const FLECK_SUPER_ALPHA     = 0.24;
+const FLECK_SUPER_TINT      = [22,22,28];           // grauer, weniger schwarz
+const FLECK_SUPER_ALPHA     = 0.39;
 const FLECK_SUPER_FEATHER   = 1.05;
 const FLECK_SUPER_DRAW_W    = 60 * SCALE * 0.9 * 0.9 * 0.9 * 0.9 * 0.9 * 0.82 * 1.06; // etwas größer
 const FLECK_SUPER_DRAW_H    = FLECK_SUPER_DRAW_W * 0.88;
@@ -88,8 +88,8 @@ const FLOATER_POS_YF = 0.30;  // höher im Bild (war 0.39)
 const BIGGER_POS_XF         = 0.24;
 const BIGGER_POS_YF         = 0.32;
 const CLOUD_BIGGER_SIZE     = BASE_UNIT_RADIUS * 2.2 * 5.0 * 5.25 * 0.5 * 0.7 * 0.8 * 3.0 * 1.3 * 0.6 * 1.3 * 1.5 * 0.4 * 0.9 * 0.9;
-const CLOUD_BIGGER_TINT     = [90,92,102];   // dunkler/deutlicher
-const CLOUD_BIGGER_ALPHA    = 0.16;
+const CLOUD_BIGGER_TINT     = [54,56,66];    // dunkler/deutlicher
+const CLOUD_BIGGER_ALPHA    = 0.28;
 const CLOUD_BIGGER_FEATHER  = 1.35;
 const BIGGER_FOLLOW_GAIN    = -0.12;
 const BIGGER_SPEED_SCALE    = 0.15;
@@ -98,8 +98,8 @@ const BIGGER_SPEED_SCALE    = 0.15;
 const SMALLER_POS_XF          = 0.62;
 const SMALLER_POS_YF          = 0.75;
 const CLOUD_SMALLER_SIZE      = (BASE_UNIT_RADIUS * 2.2 * 5.0 * 5.25 * 0.5 * 0.7 * 0.8) * 0.75 * 1.5 * 2.0 * 0.9 * 0.9 * 0.9 * 0.86;
-const CLOUD_SMALLER_TINT      = [48,48,58];    // dunkler (rechts)
-const CLOUD_SMALLER_ALPHA     = 0.075;
+const CLOUD_SMALLER_TINT      = [30,30,40];    // dunkler (rechts)
+const CLOUD_SMALLER_ALPHA     = 0.16;
 const CLOUD_SMALLER_FEATHER   = 3.95;
 const SMALLER_FOLLOW_GAIN     = -0.20;
 const SMALLER_SPEED_SCALE     = 0.18;
@@ -107,26 +107,33 @@ const SMALLER_SPEED_SCALE     = 0.18;
 /* Schlieren – heller und transparenter (etwas sichtbarer) */
 const BASE_SCHL_COUNT   = 30;
 const EXTRA_SCHL_COUNT  = 10;
-const SCHL_COUNT        = BASE_SCHL_COUNT + EXTRA_SCHL_COUNT;
-const SCHLC_TINT        = [150,150,164];
-const SCHLC_ALPHA       = 0.12;  // sehr transparent
-const SCHLC_FEATHER     = 3.1;
+const ORIGINAL_SCHL_COUNT = BASE_SCHL_COUNT + EXTRA_SCHL_COUNT;
+const SOFT_EXTRA_SCHL_COUNT = 22;
+const SCHL_COUNT        = ORIGINAL_SCHL_COUNT + SOFT_EXTRA_SCHL_COUNT;
+const SCHLC_TINT        = [98,100,114];
+const SCHLC_ALPHA       = 0.22;  // sehr transparent
+const SCHLC_FEATHER     = 5.6;
 const SCHLC_LEN_MIN     = 76 * SCALE;
 const SCHLC_LEN_MAX     = 300 * SCALE;
 const SCHLC_THICK_MIN   = 0.010;
 const SCHLC_THICK_MAX   = 0.026;
 const SCHLC_SPEED_SCALE = 0.44;
-const SCHLC_BLUR_PX     = FAST_EDIT_MODE ? 9 : 16;
+const SCHLC_BLUR_PX     = FAST_EDIT_MODE ? 12 : 22;
+const NORMAL_SCHLIEREN_NUMBERS = new Set([2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35]);
+
+function isSoftSchliereNumber(n) {
+  return !NORMAL_SCHLIEREN_NUMBERS.has(n);
+}
 
 /* Hellere Schlieren */
 const BRIGHT_SCHL_COUNT = 0;
-const BRIGHT_SCHLC_TINT = [160,160,174];
-const BRIGHT_SCHLC_ALPHA = 0.12;  // gleich transparent wie Grundschlieren
+const BRIGHT_SCHLC_TINT = [100,102,116];
+const BRIGHT_SCHLC_ALPHA = 0.20;  // gleich transparent wie Grundschlieren
 
 /* Gelartige Schlieren – wie weiße Flecken, aber transparenter & gelartiger */
 const GEL_SCHL_COUNT = 0;
-const GEL_SCHLC_TINT = [210,220,238];
-const GEL_SCHLC_ALPHA = 0.12;  // gleich transparent wie Grundschlieren
+const GEL_SCHLC_TINT = [104,108,122];
+const GEL_SCHLC_ALPHA = 0.18;  // gleich transparent wie Grundschlieren
 const GEL_SCHLC_FEATHER = 1.0;
 const GEL_SCHLC_THICK_MIN = SCHLC_THICK_MIN;
 const GEL_SCHLC_THICK_MAX = SCHLC_THICK_MIN;
@@ -2181,6 +2188,7 @@ let mouseContainDirSmooth = null;
 // Startet am Idle-Floor (nicht 1.0), sonst dauert es bei träger Smoothing
 // ewig, bis die Elemente bei ruhiger Maus tatsächlich langsam werden.
 let mouseSpeedScale = 0.03;
+let schliereOppositeMovementDelayed = null;
 let floater;             // FloaterPath instance
 let biggerCloud;
 // greyCoreCloud entfernt – biggerCloud ist jetzt ein einzelner Fleck
@@ -3292,7 +3300,7 @@ const SHOW_LABELS = false;
 const SHOW_ELEMENTS = true;
 const SHOW_CLOUDS = true;
 const SHOW_CLOUD_LABELS = false;
-const ELEMENT_ALPHA = 1.00;
+const ELEMENT_ALPHA = 1.22;
 
 function compareSlot(index, variant='orig') {
   if (variant === true) variant = 'slime';
@@ -3488,7 +3496,7 @@ function markGreyCloudVariant(label, x, y, w, h) {
 function drawGreyCloudFleckSchliereStyle(cloud) {
 }
 
-function drawHFStyleCloudFleck(cloud, sizeMul = 1, softnessMul = 1) {
+function drawHFStyleCloudFleck(cloud, sizeMul = 1, softnessMul = 1, alphaMul = 1) {
   if (!SHOW_CLOUDS || !cloud) return;
   const x = cloud.pos.x;
   const y = cloud.pos.y + cloud.size * 0.00;
@@ -3497,8 +3505,8 @@ function drawHFStyleCloudFleck(cloud, sizeMul = 1, softnessMul = 1) {
   drawingContext.save();
   if (floaterFleckCloud) {
     imageMode(CENTER);
-    drawingContext.filter = `blur(${FLECK_SUPER_BLUR_PX * 5.4 * softnessMul}px)`;
-    tint(255, Math.round(255 / Math.max(1, softnessMul * 0.78)));
+    drawingContext.filter = `brightness(0.58) contrast(1.28) blur(${FLECK_SUPER_BLUR_PX * 5.4 * softnessMul}px)`;
+    tint(255, Math.min(255, Math.round((255 * alphaMul) / Math.max(1, softnessMul * 0.78))));
     image(floaterFleckCloud.pg, x, y, w, h);
     noTint();
   } else {
@@ -3523,13 +3531,13 @@ function drawHaloSemReplica(x, y, r, angleDeg = 28) {
     drawingContext.translate(px, py);
     drawingContext.rotate(rot);
     drawingContext.filter = 'blur(19px)';
-    fill(136, 138, 148, 8);
+    fill(136, 138, 148, 18);
     ellipse(0, 0, sx * 1.36, sy * 1.24);
     drawingContext.filter = 'blur(10px)';
-    fill(166, 168, 176, 11);
+    fill(166, 168, 176, 24);
     ellipse(0, 0, sx * 0.94, sy * 0.90);
     drawingContext.filter = 'blur(3px)';
-    fill(205, 207, 214, 8);
+    fill(205, 207, 214, 18);
     ellipse(sx * 0.04, -sy * 0.02, sx * 0.60, sy * 0.54);
     drawingContext.filter = 'none';
     drawingContext.restore();
@@ -3577,11 +3585,45 @@ function drawAttachedThinSchliere(x, y, angle, len, alpha = 0.34, label = '') {
 }
 
 function schliereThicknessMul(sc) {
+  if (sc._extraSoftSchliere) return 0.78;
+  if (sc._softSchliere) return 0.88;
   return 1.0;
 }
 
 function schliereAlphaMul(sc) {
-  return 1.30;
+  if (sc._extraSoftSchliere) return 0.38;
+  if (sc._softSchliere) return 0.54;
+  return 1.12;
+}
+
+function resetSchliereRenderFlags(sc, n) {
+  sc._flexBend = FLEX_SCHLIEREN_NUMBERS.has(n);
+  sc._visualScale = LARGE_SCHLIEREN_NUMBERS.has(n) ? 2.0 : 1.0;
+  sc._morphBend = false;
+  sc._morphSeed = n * 0.73;
+  sc._semInside = false;
+  sc._semSeed = n * 1.19;
+  sc._emphasis = EMPHASIS_SCHLIEREN_NUMBERS.has(n);
+  sc._strongEmphasis = STRONG_EMPHASIS_SCHLIEREN_NUMBERS.has(n);
+  sc._midThicken = MID_THICKEN_SCHLIEREN_NUMBERS.has(n);
+  sc._darker = DARKER_SCHLIEREN_NUMBERS.has(n);
+  sc._shortSchliere = SHORT_SCHLIEREN_NUMBERS.has(n);
+  sc._longSchliere = LONG_SCHLIEREN_NUMBERS.has(n);
+  sc._angledSchliere = ANGLED_SCHLIEREN_NUMBERS.has(n);
+  sc._centerLongWave = CENTER_LONG_WAVE_SCHLIEREN_NUMBERS.has(n);
+  sc._smallSchliere = SMALL_SCHLIEREN_NUMBERS.has(n);
+  sc._centerDarkComplex = CENTER_DARK_COMPLEX_SCHLIEREN_NUMBERS.has(n);
+  sc._softCenterExtra = false;
+  sc._f2StretchSchliere = false;
+  sc._softSchliere = isSoftSchliereNumber(n);
+  sc._extraSoftSchliere = n > ORIGINAL_SCHL_COUNT;
+  sc._fleckSchliere = FLECK_SCHLIEREN_NUMBERS.has(n);
+  sc._pairedFleckSchliere = false;
+  sc._extraPairedSchliere = false;
+  sc._stableFogRender = true;
+  sc._shapeSeed = n * 2.31;
+  sc._fleckSizeMul = 0.68 + 0.64 * abs(sin(n * 1.73));
+  sc._pairedSizeMul = 0.72 + 0.58 * abs(cos(n * 1.19));
 }
 
 function drawSchlierePinkX(sc) {
@@ -3922,34 +3964,15 @@ function drawSemicolonStyleReplica(label, x, y, r, aspect = 1.0, angleDeg = 0) {
   ctx.rotate(radians(angleDeg));
   ctx.scale(aspect, 1);
 
-  const leftCells = [
-    [-1.46, -1.22, 0.40, 0.68, -0.42],
-    [-1.48, -0.58, 0.44, 0.72, -0.34],
-    [-1.50, 0.10, 0.46, 0.74, -0.26],
-    [-1.49, 0.76, 0.40, 0.64, -0.18]
+  const cells = [
+    [-0.88, -1.20, 0.40, 0.58, -0.52],
+    [-0.86, -0.62, 0.43, 0.62, -0.38],
+    [-0.82, -0.02, 0.46, 0.66, -0.24],
+    [-0.76,  0.58, 0.42, 0.58, -0.10],
+    [ 0.52,  1.16, 0.48, 0.56,  0.58],
+    [ 1.02,  1.40, 0.55, 0.46,  0.48],
+    [ 1.54,  1.48, 0.58, 0.38,  0.38]
   ];
-  const rightCells = [
-    [0.18, 1.48, 0.46, 0.58, 0.72],
-    [0.72, 1.72, 0.55, 0.46, 0.62],
-    [1.30, 1.82, 0.64, 0.38, 0.52],
-    [1.84, 1.84, 0.46, 0.32, 0.42]
-  ];
-  function rotateGroup(cells, angle) {
-    const cx = cells.reduce((sum, c) => sum + c[0], 0) / cells.length;
-    const cy = cells.reduce((sum, c) => sum + c[1], 0) / cells.length;
-    const ca = Math.cos(angle);
-    const sa = Math.sin(angle);
-    return cells.map(c => {
-      const dx = c[0] - cx;
-      const dy = c[1] - cy;
-      return [cx + dx * ca - dy * sa, cy + dx * sa + dy * ca, c[2], c[3], c[4] + angle];
-    });
-  }
-  const leftSemCells = rotateGroup(leftCells, Math.PI / 2 + radians(100));
-  const rightSemCells = rotateGroup(rightCells, Math.PI / 2 + radians(30));
-  const verticalComp = -radians(angleDeg) + radians(20);
-  leftSemCells.forEach(c => { c[0] += 1.55; });
-  rightSemCells.forEach(c => { c[0] -= 2.88; c[1] += 1.50; });
 
   function nucleusCell(cx, cy, rx, ry, dark = false, angle = 0) {
     const px = cx * r;
@@ -3979,21 +4002,7 @@ function drawSemicolonStyleReplica(label, x, y, r, aspect = 1.0, angleDeg = 0) {
     ctx.fill();
   }
 
-  function markSemMiddle(c, alpha = 0.95, color = '255, 70, 190') {
-    const px = c[0] * r;
-    const py = c[1] * r;
-    ctx.save();
-    ctx.filter = 'none';
-    ctx.strokeStyle = `rgba(${color}, ${alpha})`;
-    ctx.lineWidth = Math.max(1.4, r * 0.055);
-    ctx.beginPath();
-    ctx.ellipse(px, py, c[2] * r * 1.18, c[3] * r * 1.18, c[4], 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  leftSemCells.forEach((c, i) => nucleusCell(c[0], c[1], c[2], c[3], i < 2, c[4]));
-  rightSemCells.forEach((c, i) => nucleusCell(c[0], c[1], c[2], c[3], i >= 2, c[4]));
+  cells.forEach((c, i) => nucleusCell(c[0], c[1], c[2], c[3], i < 3, c[4]));
 
   ctx.filter = 'none';
   ctx.restore();
@@ -4024,28 +4033,89 @@ function drawRoundStyleSemReplica(label, x, y, r, aspect = 1.0, angleDeg = 0) {
     const rh = c[3] * r;
     const a = c[4];
     ctx.filter = 'blur(5px)';
-    ctx.fillStyle = 'rgba(245,252,255,0.14)';
+    ctx.fillStyle = 'rgba(252,255,255,0.24)';
     ctx.beginPath();
     ctx.ellipse(px, py, rw * 1.08, rh * 1.08, a, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.filter = 'blur(0.9px)';
-    ctx.strokeStyle = 'rgba(78,86,96,0.30)';
+    ctx.strokeStyle = 'rgba(70,78,90,0.36)';
     ctx.lineWidth = Math.max(0.32, r * 0.010);
     ctx.beginPath();
     ctx.ellipse(px, py, rw, rh, a, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.strokeStyle = 'rgba(245,252,255,0.24)';
+    ctx.strokeStyle = 'rgba(250,254,255,0.62)';
+    ctx.lineWidth = Math.max(0.22, r * 0.0045);
+    ctx.beginPath();
+    ctx.ellipse(px, py, rw * 1.04, rh * 1.04, a, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(252,255,255,0.68)';
     ctx.lineWidth = Math.max(0.25, r * 0.007);
     ctx.beginPath();
     ctx.ellipse(px, py, rw * 0.90, rh * 0.90, a, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.filter = 'blur(5.5px)';
-    ctx.fillStyle = i < 3 ? 'rgba(58,64,74,0.22)' : 'rgba(70,76,86,0.15)';
+    ctx.fillStyle = i < 3 ? 'rgba(58,64,74,0.24)' : 'rgba(70,76,86,0.17)';
     ctx.beginPath();
     ctx.ellipse(px + rw * 0.08, py + rh * 0.03, rw * 0.28, rh * 0.28, a, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.filter = 'none';
+  ctx.restore();
+  if (label) drawSceneLabel(label, x + r * 0.82, y - r * 0.78);
+}
+
+function drawRoundTestStyleSemReplica(label, x, y, r, aspect = 1.0, angleDeg = 0) {
+  const ctx = drawingContext;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(radians(angleDeg));
+  ctx.scale(aspect, 1);
+
+  const cells = [
+    [-0.88, -1.20, 0.40, 0.58, -0.52],
+    [-0.86, -0.62, 0.43, 0.62, -0.38],
+    [-0.82, -0.02, 0.46, 0.66, -0.24],
+    [-0.76,  0.58, 0.42, 0.58, -0.10],
+    [ 0.52,  1.16, 0.48, 0.56,  0.58],
+    [ 1.02,  1.40, 0.55, 0.46,  0.48],
+    [ 1.54,  1.48, 0.58, 0.38,  0.38]
+  ];
+
+  cells.forEach(c => {
+    const px = c[0] * r;
+    const py = c[1] * r;
+    const rw = c[2] * r;
+    const rh = c[3] * r;
+    const a = c[4];
+
+    ctx.filter = 'blur(5px)';
+    ctx.fillStyle = 'rgba(245,252,255,0.09)';
+    ctx.beginPath();
+    ctx.ellipse(px, py, rw * 0.92, rh * 0.92, a, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.filter = 'blur(0.8px)';
+    ctx.strokeStyle = 'rgba(75,82,90,0.42)';
+    ctx.lineWidth = Math.max(0.35, r * 0.007);
+    ctx.beginPath();
+    ctx.ellipse(px, py, rw, rh, a, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(245,252,255,0.34)';
+    ctx.lineWidth = Math.max(0.25, r * 0.005);
+    ctx.beginPath();
+    ctx.ellipse(px, py, rw * 0.94, rh * 0.94, a, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.filter = 'blur(7px)';
+    ctx.fillStyle = 'rgba(55,60,68,0.30)';
+    ctx.beginPath();
+    ctx.ellipse(px, py, rw * 0.18, rh * 0.18, a, 0, Math.PI * 2);
     ctx.fill();
   });
 
@@ -4421,7 +4491,11 @@ class SchlierCloud {
     translate(this.pos.x, this.pos.y);
     rotate(this.ang);
     drawingContext.filter = `blur(${SCHLC_BLUR_PX}px)`;
-    if (this._midThicken) {
+    if (this._extraSoftSchliere) {
+      drawingContext.filter = `contrast(0.54) brightness(1.10) blur(${SCHLC_BLUR_PX + 14}px)`;
+    } else if (this._softSchliere) {
+      drawingContext.filter = `contrast(0.64) brightness(1.06) blur(${SCHLC_BLUR_PX + 9}px)`;
+    } else if (this._midThicken) {
       drawingContext.filter = `contrast(0.86) brightness(0.92) blur(${SCHLC_BLUR_PX + 6}px)`;
     } else if (this._centerDarkComplex) {
       drawingContext.filter = `contrast(1.16) brightness(0.78) blur(${SCHLC_BLUR_PX + 2}px)`;
@@ -4451,7 +4525,7 @@ class SchlierCloud {
     push();
     translate(-drawLen / 2, 0);
     if (SCHLIEREN_FOG_RENDER) {
-      if (this._fleckSchliere) {
+      if (this._fleckSchliere && !this._stableFogRender) {
         if (this._pairedFleckSchliere) {
           drawingContext.save();
           const pairScale = this._pairedSizeMul || 1;
@@ -4464,37 +4538,39 @@ class SchlierCloud {
           const pairAlphaMul = this._extraPairedSchliere ? 0.45 : 1;
           drawingContext.filter = 'blur(7px)';
           noFill();
-          stroke(124, 126, 136, 21 * pairAlphaMul);
+          stroke(88, 90, 104, 30 * pairAlphaMul);
           strokeWeight(max(3, dia * 0.38));
           beginShape();
           for (let i = 0; i <= 34; i++) {
             const t = i / 34;
             const x = drawLen * 0.48 - pairLen * 0.50 + t * pairLen;
-            const y = sin(t * PI * 1.2 + frameCount * 0.018 + phase) * dia * 0.42
-              + sin(t * PI * 3.1 + frameCount * 0.011 + phase * 0.7) * dia * 0.16;
+            const y = sin(t * PI * (1.05 + 0.45 * abs(sin(phase))) + this.wavePhase * 0.52 + phase) * dia * 0.92
+              + sin(t * PI * (2.65 + 1.25 * abs(cos(phase))) - this.wavePhase * 0.39 + phase * 0.7) * dia * 0.42
+              + sin(t * PI * 5.2 + this.wavePhase * 0.67 + phase * 1.3) * dia * 0.18;
             curveVertex(x, y);
           }
           endShape();
 
           drawingContext.filter = 'blur(2.6px)';
-          stroke(182, 184, 194, 13 * pairAlphaMul);
+          stroke(146, 148, 160, 24 * pairAlphaMul);
           strokeWeight(max(0.7, dia * 0.09));
           beginShape();
           for (let i = 0; i <= 34; i++) {
             const t = i / 34;
             const x = drawLen * 0.48 - pairLen * 0.50 + t * pairLen;
-            const y = sin(t * PI * 1.2 + frameCount * 0.018 + phase) * dia * 0.42
-              + sin(t * PI * 3.1 + frameCount * 0.011 + phase * 0.7) * dia * 0.16;
+            const y = sin(t * PI * (1.05 + 0.45 * abs(sin(phase))) + this.wavePhase * 0.52 + phase) * dia * 0.92
+              + sin(t * PI * (2.65 + 1.25 * abs(cos(phase))) - this.wavePhase * 0.39 + phase * 0.7) * dia * 0.42
+              + sin(t * PI * 5.2 + this.wavePhase * 0.67 + phase * 1.3) * dia * 0.18;
             curveVertex(x, y);
           }
           endShape();
 
           drawingContext.filter = 'blur(8px)';
           noStroke();
-          fill(122, 124, 134, 19 * pairAlphaMul);
+          fill(86, 88, 102, 28 * pairAlphaMul);
           ellipse(blobX, blobY, dia * 2.2, dia * 1.3);
           drawingContext.filter = 'blur(3.2px)';
-          fill(170, 172, 182, 12 * pairAlphaMul);
+          fill(136, 138, 150, 22 * pairAlphaMul);
           ellipse(blobX, blobY, dia * 1.55, dia * 0.86);
           drawingContext.filter = 'none';
           drawingContext.restore();
@@ -4504,22 +4580,37 @@ class SchlierCloud {
         }
         drawingContext.save();
         noStroke();
-        const t = 0.5;
-        const wave =
-          sin(t * PI * 0.86 + this._shapeSeed * 0.17) * 0.38 +
-          sin((t - 0.18) * PI * 2.35 + this._shapeSeed * 0.31) * 0.16 +
-          sin(t * PI * 4.2 + this.wavePhase * 0.18) * 0.045;
-        const px = t * drawLen;
-        const py = wave * curveMag;
         const fleckScale = this._fleckSizeMul || 1;
         const dia = max(5, segThick * (4.0 + 1.9 * abs(sin(this._shapeSeed))) * fleckScale);
-        const visibleLen = dia * (1.00 + 0.18 * abs(cos(this._shapeSeed * 0.53)));
-        drawingContext.filter = 'blur(7px)';
-        fill(122, 124, 134, 19);
-        ellipse(px, py, visibleLen, dia);
-        drawingContext.filter = 'blur(2.8px)';
-        fill(162, 164, 174, 14);
-        ellipse(px, py, visibleLen * 0.78, dia * 0.78);
+        const bodyLen = max(dia * 4.2, drawLen * (0.26 + 0.18 * abs(sin(this._shapeSeed * 0.53))));
+        const startX = drawLen * 0.50 - bodyLen * 0.50;
+        const phase = this._shapeSeed || 0;
+        const bodyY = (t) => {
+          return (
+            sin(t * PI * (0.92 + 0.62 * abs(sin(phase))) + this.wavePhase * 0.58 + phase * 0.17) * 0.92 +
+            sin((t - 0.20) * PI * (2.35 + 1.10 * abs(cos(phase))) - this.wavePhase * 0.44 + phase * 0.31) * 0.44 +
+            sin(t * PI * (4.6 + 1.80 * abs(sin(phase * 0.7))) + this.wavePhase * 0.73) * 0.22
+          ) * curveMag * 0.82;
+        };
+        drawingContext.filter = 'blur(8px)';
+        noFill();
+        stroke(82, 84, 98, 34);
+        strokeWeight(max(3.2, dia * 0.64));
+        beginShape();
+        for (let k = 0; k <= 28; k++) {
+          const tt = k / 28;
+          curveVertex(startX + tt * bodyLen, bodyY(tt));
+        }
+        endShape();
+        drawingContext.filter = 'blur(3px)';
+        stroke(132, 134, 148, 26);
+        strokeWeight(max(0.8, dia * 0.18));
+        beginShape();
+        for (let k = 0; k <= 28; k++) {
+          const tt = k / 28;
+          curveVertex(startX + tt * bodyLen, bodyY(tt));
+        }
+        endShape();
         drawingContext.filter = 'none';
         drawingContext.restore();
         pop();
@@ -4529,28 +4620,29 @@ class SchlierCloud {
       drawingContext.save();
       drawingContext.filter = 'blur(8.5px)';
       noFill();
-      stroke(124, 126, 136, 19);
+      stroke(86, 88, 102, 28);
       strokeWeight(Math.max(3.8, segThick * 3.4));
+      const fogPhase = this._stableFogRender ? this._shapeSeed * 0.37 : this.wavePhase;
       beginShape();
       for (let j = 0; j <= 36; j++) {
         const t = j / 36;
         const wave =
-          sin(t * PI * 0.86 + this._shapeSeed * 0.17) * 0.38 +
-          sin((t - 0.18) * PI * 2.35 + this._shapeSeed * 0.31) * 0.16 +
-          sin(t * PI * 4.2 + this.wavePhase * 0.18) * 0.045;
+          sin(t * PI * (0.72 + 0.24 * abs(sin(this._shapeSeed))) + fogPhase * 0.34 + this._shapeSeed * 0.17) * 0.66 +
+          sin((t - 0.18) * PI * (2.05 + 0.72 * abs(cos(this._shapeSeed))) - fogPhase * 0.23 + this._shapeSeed * 0.31) * 0.34 +
+          sin(t * PI * (3.7 + 1.35 * abs(sin(this._shapeSeed * 0.7))) + fogPhase * 0.41) * 0.18;
         curveVertex(t * drawLen, wave * curveMag);
       }
       endShape();
       drawingContext.filter = 'blur(2.4px)';
-      stroke(180, 182, 192, 12);
+      stroke(140, 142, 154, 22);
       strokeWeight(Math.max(0.62, segThick * 0.58));
       beginShape();
       for (let j = 0; j <= 36; j++) {
         const t = j / 36;
         const wave =
-          sin(t * PI * 0.86 + this._shapeSeed * 0.17) * 0.38 +
-          sin((t - 0.18) * PI * 2.35 + this._shapeSeed * 0.31) * 0.16 +
-          sin(t * PI * 4.2 + this.wavePhase * 0.18) * 0.045;
+          sin(t * PI * (0.72 + 0.24 * abs(sin(this._shapeSeed))) + fogPhase * 0.34 + this._shapeSeed * 0.17) * 0.66 +
+          sin((t - 0.18) * PI * (2.05 + 0.72 * abs(cos(this._shapeSeed))) - fogPhase * 0.23 + this._shapeSeed * 0.31) * 0.34 +
+          sin(t * PI * (3.7 + 1.35 * abs(sin(this._shapeSeed * 0.7))) + fogPhase * 0.41) * 0.18;
         curveVertex(t * drawLen, wave * curveMag);
       }
       endShape();
@@ -4563,12 +4655,12 @@ class SchlierCloud {
     drawingContext.save();
     drawingContext.globalAlpha *= this._fleckSchliere ? 0.24 : 0.18;
     noFill();
-    if (this._f2StretchSchliere) stroke(70, 72, 84, 44);
-    else if (this._centerDarkComplex) stroke(72, 74, 88, 112);
-    else if (this._centerLongWave) stroke(112, 114, 128, 76);
-    else if (this._midThicken) stroke(88, 90, 104, 78);
-    else if (this._darker) stroke(112, 112, 126, 70);
-    else stroke(150, 150, 164, 46);
+    if (this._f2StretchSchliere) stroke(54, 56, 70, 86);
+    else if (this._centerDarkComplex) stroke(54, 56, 72, 150);
+    else if (this._centerLongWave) stroke(72, 74, 88, 120);
+    else if (this._midThicken) stroke(62, 64, 78, 124);
+    else if (this._darker) stroke(66, 68, 82, 118);
+    else stroke(92, 94, 108, 92);
     strokeWeight(Math.max(0.45, segThick * (this._fleckSchliere ? 0.48 : 0.36)));
     beginShape();
     for (let j = 0; j <= 36; j++) {
@@ -5065,7 +5157,7 @@ const DARK_FLECK_LEFT_POS_XF    = 0.25;
 const DARK_FLECK_LEFT_POS_YF    = 0.57;
 const DARK_FLECK_LEFT_SIZE      = CLOUD_SMALLER_SIZE * 0.50 * 0.8;  // kleiner
 const DARK_FLECK_LEFT_TINT      = [140,140,140];  // dunkler
-const DARK_FLECK_LEFT_ALPHA     = 0.28;  // dunkler
+const DARK_FLECK_LEFT_ALPHA     = 0.46;  // dunkler
 const DARK_FLECK_LEFT_FEATHER   = 1.7;
 const DARK_FLECK_LEFT_FOLLOW    = -0.10;
 const DARK_FLECK_LEFT_SPEED     = 0.20;
@@ -6425,8 +6517,12 @@ function draw() {
   const speedSmoothing = targetSpeedScale > mouseSpeedScale ? 0.105 : 0.055;
   mouseSpeedScale = lerp(mouseSpeedScale, targetSpeedScale, speedSmoothing);
 
-  // Anwenden auf die rohe Bewegung
-  oppositeMovement.mult(mouseSpeedScale * directionChangeBoost);
+  // Elemente/Flecken/HF reagieren direkt; nur Schlieren bekommen unten eine eigene Verzögerung.
+  const elementSpeedScale = mouseMoving ? targetSpeedScale : 0;
+  oppositeMovement.mult(elementSpeedScale * directionChangeBoost);
+  if (!schliereOppositeMovementDelayed) schliereOppositeMovementDelayed = createVector(0, 0);
+  schliereOppositeMovementDelayed.lerp(oppositeMovement, mouseMoving ? 0.024 : 0.034);
+  const oppositeMovementSchlieren = schliereOppositeMovementDelayed.copy();
 
   // ---- Sanftes Anrampen für Nicht-Schlieren-Elemente ----
   // Phase 1 (rampUp, 0..18 Frames): 0 -> 1.1 mit easeOut
@@ -6462,10 +6558,10 @@ function draw() {
     }
   }
   // Skaliertes oppositeMovement nur für Nicht-Schlieren-Elemente
-  const oppositeMovementNS = p5.Vector.mult(oppositeMovement, nonSchlierScale * 0.82);
+  const oppositeMovementNS = p5.Vector.mult(oppositeMovement, 0.82);
 
   // Floater updaten (verwendet die geskalierte Variante)
-  floater.update(mouseMoving, mMag * nonSchlierScale, mouseDXNorm * nonSchlierScale, oppositeMovementNS);
+  floater.update(mouseMoving, mMag, mouseDXNorm, oppositeMovementNS);
 
   // Transparenter Hintergrund - blauer Himmel scheint durch
   clear();
@@ -6482,8 +6578,8 @@ function draw() {
   const targetBgX = constrain(-mouseXNorm * window.innerWidth  * 0.09, -maxBgX, maxBgX);
   const targetBgY = constrain(-mouseYNorm * window.innerHeight * 0.09, -maxBgY, maxBgY);
   // Interpolation: schneller bei Mausbewegung, ruhiges Nachschwingen bei Stillstand
-  const bgLerp = mouseMoving ? 0.18 : 0.045;
-  const bgMaxStep = window.innerWidth * 0.0042;
+  const bgLerp = mouseMoving ? 0.34 : 0.08;
+  const bgMaxStep = window.innerWidth * 0.0085;
   bgParallaxX += constrain((targetBgX - bgParallaxX) * bgLerp, -bgMaxStep, bgMaxStep);
   bgParallaxY += constrain((targetBgY - bgParallaxY) * bgLerp, -bgMaxStep, bgMaxStep);
   const bgEl = document.getElementById('bg');
@@ -6521,7 +6617,7 @@ function draw() {
   // Kern weich angeglichen an Corona: größer, diffuser, geringerer Alpha
   // → keine harte Trennung mehr zwischen heller Corona und dunklem Kern
   {
-    drawHFStyleCloudFleck(biggerCloud, 1.0);
+    drawHFStyleCloudFleck(biggerCloud, 1.1, 1, 1.16);
     drawCloudLabel('F1', biggerCloud);
     if (upperLeftGreyCloud) {
       const f2Follow = createVector(
@@ -6537,7 +6633,7 @@ function draw() {
         1.15
       );
     }
-    drawHFStyleCloudFleck(upperLeftGreyCloud, 1.0, 2.15);
+    drawHFStyleCloudFleck(upperLeftGreyCloud, 1.0, 2.10, 1.42);
     drawCloudLabel('F2', upperLeftGreyCloud);
     if (SHOW_CLOUDS) {
       f2CenterCopies.forEach((c, i) => {
@@ -6546,7 +6642,7 @@ function draw() {
           mouseDirNS.y * 0.72 + cos(frameCount * 0.012 + i) * 0.06
         );
         c.update(mouseMoving, [0.39, 0.61], [0.42, 0.62], SMALLER_SPEED_SCALE * 0.75, follow, 0.95);
-        drawHFStyleCloudFleck(c, 1.0, 2.15);
+        drawHFStyleCloudFleck(c, 1.0, 2.10, 1.42);
       });
     }
   }
@@ -6563,32 +6659,9 @@ function draw() {
   const schlierRampTarget = mouseMoving ? 1 : 0;
   if (SHOW_SCHLIEREN) schlierClouds.forEach((sc, i) => {
     const n = schliereNumber++;
-    sc._flexBend = FLEX_SCHLIEREN_NUMBERS.has(n);
-    sc._visualScale = LARGE_SCHLIEREN_NUMBERS.has(n) ? 2.0 : 1.0;
-    sc._morphBend = MORPH_SCHLIEREN_NUMBERS.has(n);
-    sc._morphSeed = n * 0.73;
-    sc._semInside = SEM_SCHLIEREN_NUMBERS.has(n);
-    sc._semSeed = n * 1.19;
-    sc._emphasis = EMPHASIS_SCHLIEREN_NUMBERS.has(n);
-    sc._strongEmphasis = STRONG_EMPHASIS_SCHLIEREN_NUMBERS.has(n);
-    sc._midThicken = MID_THICKEN_SCHLIEREN_NUMBERS.has(n);
-    sc._darker = DARKER_SCHLIEREN_NUMBERS.has(n);
-    sc._shortSchliere = SHORT_SCHLIEREN_NUMBERS.has(n);
-    sc._longSchliere = LONG_SCHLIEREN_NUMBERS.has(n);
-    sc._angledSchliere = ANGLED_SCHLIEREN_NUMBERS.has(n);
-    sc._centerLongWave = CENTER_LONG_WAVE_SCHLIEREN_NUMBERS.has(n);
-    sc._smallSchliere = SMALL_SCHLIEREN_NUMBERS.has(n);
-    sc._centerDarkComplex = CENTER_DARK_COMPLEX_SCHLIEREN_NUMBERS.has(n);
-    sc._softCenterExtra = sc._softCenterExtra || false;
-    sc._f2StretchSchliere = sc._f2StretchSchliere || false;
-    sc._fleckSchliere = sc._f2StretchSchliere || FLECK_SCHLIEREN_NUMBERS.has(n);
-    sc._pairedFleckSchliere = PAIRED_FLECK_SCHLIEREN_NUMBERS.has(n);
-    sc._extraPairedSchliere = n > BASE_SCHL_COUNT;
-    sc._shapeSeed = n * 2.31;
-    sc._fleckSizeMul = 0.68 + 0.64 * abs(sin(n * 1.73));
-    sc._pairedSizeMul = 0.72 + 0.58 * abs(cos(n * 1.19));
+    resetSchliereRenderFlags(sc, n);
     sc._motionRamp = lerp(sc._motionRamp || 0, schlierRampTarget, schlierRampTarget ? 0.78 : 0.11);
-    sc.update(mouseMoving, oppositeMovement);
+    sc.update(mouseMoving, oppositeMovementSchlieren);
     if (HIDDEN_SCHLIEREN_NUMBERS.has(n)) return;
     if (sc._fleckSchliere) {
       visibleFleckSchliereNumber++;
@@ -6620,28 +6693,9 @@ function draw() {
   /* --- Hellere Schlieren --- */
   if (SHOW_SCHLIEREN) brightSchlierClouds.forEach(sc=>{
     const n = schliereNumber++;
-    sc._flexBend = FLEX_SCHLIEREN_NUMBERS.has(n);
-    sc._visualScale = LARGE_SCHLIEREN_NUMBERS.has(n) ? 2.0 : 1.0;
-    sc._morphBend = MORPH_SCHLIEREN_NUMBERS.has(n);
-    sc._morphSeed = n * 0.73;
-    sc._semInside = SEM_SCHLIEREN_NUMBERS.has(n);
-    sc._semSeed = n * 1.19;
-    sc._emphasis = EMPHASIS_SCHLIEREN_NUMBERS.has(n);
-    sc._strongEmphasis = STRONG_EMPHASIS_SCHLIEREN_NUMBERS.has(n);
-    sc._midThicken = MID_THICKEN_SCHLIEREN_NUMBERS.has(n);
-    sc._darker = DARKER_SCHLIEREN_NUMBERS.has(n);
-    sc._shortSchliere = SHORT_SCHLIEREN_NUMBERS.has(n);
-    sc._longSchliere = LONG_SCHLIEREN_NUMBERS.has(n);
-    sc._angledSchliere = ANGLED_SCHLIEREN_NUMBERS.has(n);
-    sc._centerLongWave = CENTER_LONG_WAVE_SCHLIEREN_NUMBERS.has(n);
-    sc._smallSchliere = SMALL_SCHLIEREN_NUMBERS.has(n);
-    sc._centerDarkComplex = CENTER_DARK_COMPLEX_SCHLIEREN_NUMBERS.has(n);
-    sc._softCenterExtra = sc._softCenterExtra || false;
-    sc._f2StretchSchliere = sc._f2StretchSchliere || false;
-    sc._fleckSchliere = sc._f2StretchSchliere || FLECK_SCHLIEREN_NUMBERS.has(n);
-    sc._shapeSeed = n * 2.31;
+    resetSchliereRenderFlags(sc, n);
     sc._motionRamp = lerp(sc._motionRamp || 0, schlierRampTarget, schlierRampTarget ? 0.78 : 0.11);
-    sc.update(mouseMoving, oppositeMovement);
+    sc.update(mouseMoving, oppositeMovementSchlieren);
     if (HIDDEN_SCHLIEREN_NUMBERS.has(n)) return;
     const labelN = visibleSchliereNumber++;
     const _origThick = sc.thickCurrent;
@@ -6658,28 +6712,9 @@ function draw() {
   /* --- Gelartige Schlieren --- */
   if (SHOW_SCHLIEREN) gelSchlierClouds.forEach(sc=>{
     const n = schliereNumber++;
-    sc._flexBend = FLEX_SCHLIEREN_NUMBERS.has(n);
-    sc._visualScale = LARGE_SCHLIEREN_NUMBERS.has(n) ? 2.0 : 1.0;
-    sc._morphBend = MORPH_SCHLIEREN_NUMBERS.has(n);
-    sc._morphSeed = n * 0.73;
-    sc._semInside = SEM_SCHLIEREN_NUMBERS.has(n);
-    sc._semSeed = n * 1.19;
-    sc._emphasis = EMPHASIS_SCHLIEREN_NUMBERS.has(n);
-    sc._strongEmphasis = STRONG_EMPHASIS_SCHLIEREN_NUMBERS.has(n);
-    sc._midThicken = MID_THICKEN_SCHLIEREN_NUMBERS.has(n);
-    sc._darker = DARKER_SCHLIEREN_NUMBERS.has(n);
-    sc._shortSchliere = SHORT_SCHLIEREN_NUMBERS.has(n);
-    sc._longSchliere = LONG_SCHLIEREN_NUMBERS.has(n);
-    sc._angledSchliere = ANGLED_SCHLIEREN_NUMBERS.has(n);
-    sc._centerLongWave = CENTER_LONG_WAVE_SCHLIEREN_NUMBERS.has(n);
-    sc._smallSchliere = SMALL_SCHLIEREN_NUMBERS.has(n);
-    sc._centerDarkComplex = CENTER_DARK_COMPLEX_SCHLIEREN_NUMBERS.has(n);
-    sc._softCenterExtra = sc._softCenterExtra || false;
-    sc._f2StretchSchliere = sc._f2StretchSchliere || false;
-    sc._fleckSchliere = sc._f2StretchSchliere || FLECK_SCHLIEREN_NUMBERS.has(n);
-    sc._shapeSeed = n * 2.31;
+    resetSchliereRenderFlags(sc, n);
     sc._motionRamp = lerp(sc._motionRamp || 0, schlierRampTarget, schlierRampTarget ? 0.78 : 0.11);
-    sc.update(mouseMoving, oppositeMovement);
+    sc.update(mouseMoving, oppositeMovementSchlieren);
     if (HIDDEN_SCHLIEREN_NUMBERS.has(n)) return;
     const labelN = visibleSchliereNumber++;
     const _origThick = sc.thickCurrent;
@@ -6719,7 +6754,7 @@ function draw() {
     smallerFollow,
     1.6
   );
-  drawHFStyleCloudFleck(smallerCloud, 1.0, 2.15);
+  drawHFStyleCloudFleck(smallerCloud, 1.0, 2.10, 1.42);
   drawCloudLabel('F3', smallerCloud);
   // Weisser Superfleck temporÃ¤r ausgeblendet.
   /* Markierungsring + Beschriftung entfernt */
@@ -6733,15 +6768,9 @@ function draw() {
     drawHFStyleBlobReplica('', rh.x, rh.y, NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8, 1);
     drawingContext.restore();
     drawingContext.save();
-    drawingContext.globalAlpha *= ELEMENT_ALPHA * 0.96;
-    drawRoundStyleSemReplica('', rsem.x, rsem.y, NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8 * 2.028 * 0.8 * 0.85, 0.84, 28);
+    drawingContext.globalAlpha *= ELEMENT_ALPHA * 0.62;
+    drawSemicolonStyleReplica('', rsem.x, rsem.y, NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8 * 2.028 * 0.8 * 1.24, 0.84, 28);
     drawingContext.restore();
-    drawingContext.save();
-    drawingContext.globalAlpha *= ELEMENT_ALPHA;
-    drawHaloSemReplica(rsem.x + NUCLEUS_DROP_BASE_SIZE * 1.5, rsem.y, NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8 * 2.028 * 0.8 * 0.85, 28);
-    drawingContext.restore();
-    drawingContext.filter = 'none';
-    drawingContext.filter = 'none';
     drawVariantLetter(uniqueElementLetter('Rundtest', 'hf'), rh.x + 14, rh.y - 10);
     drawVariantLetter(uniqueElementLetter('Sem1'), rsem.x, rsem.y);
   }
@@ -6785,7 +6814,7 @@ function draw() {
     const faded = compareLabel === 'Nucleus 1' || compareLabel === 'Nucleus 2';
     if (a !== 1 || s !== 1) {
       drawingContext.save();
-      if (faded) drawingContext.globalAlpha *= 0.86;
+      if (faded) drawingContext.globalAlpha *= 0.72;
       drawingContext.globalAlpha *= a * ELEMENT_ALPHA;
       if (s !== 1) {
         translate(d.pos.x, d.pos.y);
@@ -6796,7 +6825,7 @@ function draw() {
       drawingContext.restore();
     } else {
       drawingContext.save();
-      if (faded) drawingContext.globalAlpha *= 0.86;
+      if (faded) drawingContext.globalAlpha *= 0.72;
       drawingContext.globalAlpha *= ELEMENT_ALPHA;
       d.display();
       drawingContext.restore();
@@ -6826,14 +6855,14 @@ function draw() {
     if (compareVariantVisible(compareLabel, 'slime')) {
       if (compareLabel === 'Dreieck') {
         drawingContext.save();
-        drawingContext.globalAlpha *= 0.085 * ELEMENT_ALPHA;
+        drawingContext.globalAlpha *= 0.055 * ELEMENT_ALPHA;
         drawingContext.filter = 'brightness(1.86) contrast(0.58) blur(2.2px)';
         drawSlimeStyleBlobReplica('', sp.x + ox, sp.y + oy, r * 1.04, d.aspect || 1, 18 + d._compareCopy);
         drawingContext.filter = 'none';
         drawingContext.restore();
       } else if (compareLabel === 'Nuclei-Gruppe') {
         drawingContext.save();
-        drawingContext.globalAlpha *= 0.82 * ELEMENT_ALPHA;
+        drawingContext.globalAlpha *= 0.62 * ELEMENT_ALPHA;
         drawingContext.save();
         drawingContext.globalAlpha *= ELEMENT_ALPHA;
         drawSlimeStyleBlobReplica('', sp.x + ox, sp.y + oy, r, d.aspect || 1, 18 + d._compareCopy);
@@ -6880,7 +6909,7 @@ function draw() {
       const dy = (d.pos.y - sourceCenter.y) * copyScale;
       d.pos.set(cx + dx * ca - dy * sa, cy + dx * sa + dy * ca);
       drawingContext.save();
-      drawingContext.globalAlpha *= ((typeof d._alphaMul === 'number') ? d._alphaMul : 1) * 0.92 * ELEMENT_ALPHA;
+      drawingContext.globalAlpha *= ((typeof d._alphaMul === 'number') ? d._alphaMul : 1) * 0.72 * ELEMENT_ALPHA;
       d.display();
       drawingContext.restore();
       d.pos.set(oldPos.x, oldPos.y);
@@ -6936,8 +6965,8 @@ function draw() {
     floater.pos.set(hfBaseX + hfMotionX, hf1BaseY + hfMotionY);
     push();
     drawingContext.save();
-    drawingContext.globalAlpha *= 0.64;
-    drawingContext.filter = 'contrast(1.16) brightness(1.03)';
+    drawingContext.globalAlpha *= ELEMENT_ALPHA * 1.28;
+    drawingContext.filter = 'contrast(1.42) brightness(1.14)';
     translate(floater.pos.x, floater.pos.y);
     scale(0.80, 0.93);
     translate(-floater.pos.x, -floater.pos.y);
