@@ -3309,6 +3309,7 @@ const SHOW_ELEMENTS = true;
 const SHOW_CLOUDS = true;
 const SHOW_CLOUD_LABELS = false;
 const ELEMENT_ALPHA = 1.22;
+const NON_HF_ELEMENT_ALPHA = 1.12;
 
 function compareSlot(index, variant='orig') {
   if (variant === true) variant = 'slime';
@@ -6828,7 +6829,7 @@ function draw() {
   // Kern weich angeglichen an Corona: größer, diffuser, geringerer Alpha
   // → keine harte Trennung mehr zwischen heller Corona und dunklem Kern
   {
-    drawHFStyleCloudFleck(biggerCloud, 1.1, 1, 1.30);
+    drawHFStyleCloudFleck(biggerCloud, 1.1, 1, 1.48);
     drawCloudLabel('F1', biggerCloud);
     if (upperLeftGreyCloud) {
       const f2Follow = createVector(
@@ -6975,12 +6976,12 @@ function draw() {
     const semR = NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8 * 2.028 * 0.8 * 1.24;
     const rsemForm23 = flowedPoint(p5.Vector.add(createVector(width * 0.58 + semR * 2.2, height * 0.58), cmpMotion), 'sem-form23-next', 16);
     drawingContext.save();
-    drawingContext.globalAlpha = 0.72 * ELEMENT_ALPHA;
+    drawingContext.globalAlpha = 0.72 * ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
     drawingContext.filter = 'none';
     drawHFStyleBlobReplica('', rh.x, rh.y, NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8, 1);
     drawingContext.restore();
     drawingContext.save();
-    drawingContext.globalAlpha *= ELEMENT_ALPHA * 0.86;
+    drawingContext.globalAlpha *= ELEMENT_ALPHA * 0.86 * NON_HF_ELEMENT_ALPHA;
     drawForm23RoundTestSemReplica('', rsemForm23.x, rsemForm23.y, semR, 0.84, 0, 1.32);
     drawingContext.restore();
     drawVariantLetter(uniqueElementLetter('Rundtest', 'hf'), rh.x + 14, rh.y - 10);
@@ -6989,7 +6990,7 @@ function draw() {
 
   drawingContext.save();
   const centerRound = flowedPoint(p5.Vector.add(createVector(width * 0.5, height * 0.5), cmpMotion), 'rundtest-center', 13);
-  drawingContext.globalAlpha = 0.92 * ELEMENT_ALPHA;
+  drawingContext.globalAlpha = 0.92 * ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
   drawStaticRoundTestReplica('', centerRound.x, centerRound.y, NUCLEUS_DROP_BASE_SIZE * 0.54);
   drawingContext.restore();
 
@@ -7000,7 +7001,7 @@ function draw() {
   ].forEach(rt => {
     const p = flowedPoint(p5.Vector.add(createVector(width * rt.x, height * rt.y), cmpMotion), rt.key, rt.amp);
     drawingContext.save();
-    drawingContext.globalAlpha = 0.90 * ELEMENT_ALPHA;
+    drawingContext.globalAlpha = 0.90 * ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
     drawStaticRoundTestReplica('', p.x, p.y, NUCLEUS_DROP_BASE_SIZE * rt.r);
     drawingContext.restore();
   });
@@ -7045,7 +7046,7 @@ function draw() {
     if (a !== 1 || s !== 1) {
       drawingContext.save();
       if (faded) drawingContext.globalAlpha *= 0.72;
-      drawingContext.globalAlpha *= a * ELEMENT_ALPHA;
+      drawingContext.globalAlpha *= a * ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
       if (s !== 1) {
         translate(d.pos.x, d.pos.y);
         scale(s);
@@ -7056,7 +7057,7 @@ function draw() {
     } else {
       drawingContext.save();
       if (faded) drawingContext.globalAlpha *= 0.72;
-      drawingContext.globalAlpha *= ELEMENT_ALPHA;
+      drawingContext.globalAlpha *= ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
       d.display();
       drawingContext.restore();
     }
@@ -7077,7 +7078,7 @@ function draw() {
     if (compareVariantVisible(compareLabel, 'hf')) {
       if (faded) drawingContext.save(), drawingContext.globalAlpha *= 0.72;
       drawingContext.save();
-      drawingContext.globalAlpha *= ELEMENT_ALPHA;
+      drawingContext.globalAlpha *= ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
       drawHFStyleBlobReplica('', hp.x + ox, hp.y + oy, variantR, d.aspect || 1);
       drawingContext.restore();
       if (faded) drawingContext.restore();
@@ -7085,15 +7086,15 @@ function draw() {
     if (compareVariantVisible(compareLabel, 'slime')) {
       if (compareLabel === 'Dreieck') {
         drawingContext.save();
-        drawingContext.globalAlpha *= 0.92 * ELEMENT_ALPHA;
+        drawingContext.globalAlpha *= 0.92 * ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
         drawStaticRoundTestReplica('', sp.x + ox, sp.y + oy, r * 0.88);
         drawingContext.filter = 'none';
         drawingContext.restore();
       } else if (compareLabel === 'Nuclei-Gruppe') {
         drawingContext.save();
-        drawingContext.globalAlpha *= 0.62 * ELEMENT_ALPHA;
+        drawingContext.globalAlpha *= 0.62 * ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
         drawingContext.save();
-        drawingContext.globalAlpha *= ELEMENT_ALPHA;
+        drawingContext.globalAlpha *= ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
         drawSlimeStyleBlobReplica('', sp.x + ox, sp.y + oy, r, d.aspect || 1, 18 + d._compareCopy);
         drawingContext.restore();
         drawingContext.restore();
@@ -7104,7 +7105,7 @@ function draw() {
     if (compareVariantVisible(compareLabel, 'tube')) {
       if (faded) drawingContext.save(), drawingContext.globalAlpha *= 0.72;
       drawingContext.save();
-      drawingContext.globalAlpha *= ELEMENT_ALPHA;
+      drawingContext.globalAlpha *= ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
       drawTubeStyleBlobReplica('', tp.x + ox, tp.y + oy, variantR, d.aspect || 1);
       drawingContext.restore();
       if (faded) drawingContext.restore();
@@ -7137,7 +7138,7 @@ function draw() {
       const dy = (d.pos.y - sourceCenter.y) * copyScale;
       d.pos.set(cx + dx * ca - dy * sa, cy + dx * sa + dy * ca);
       drawingContext.save();
-      drawingContext.globalAlpha *= ((typeof d._alphaMul === 'number') ? d._alphaMul : 1) * 0.60 * ELEMENT_ALPHA;
+      drawingContext.globalAlpha *= ((typeof d._alphaMul === 'number') ? d._alphaMul : 1) * 0.60 * ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
       d.display();
       drawingContext.restore();
       d.pos.set(oldPos.x, oldPos.y);
@@ -7151,7 +7152,7 @@ function draw() {
     const b1 = flowedPoint(p5.Vector.add(createVector(width * 0.15, height * 0.82), cmpMotion), 'b-copy-1', 13);
     const b2 = flowedPoint(p5.Vector.add(createVector(width * 0.23, height * 0.91), cmpMotion), 'b-copy-2', 13);
     drawingContext.save();
-    drawingContext.globalAlpha *= ELEMENT_ALPHA;
+    drawingContext.globalAlpha *= ELEMENT_ALPHA * NON_HF_ELEMENT_ALPHA;
     drawHFStyleBlobReplica('', b1.x, b1.y, NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8 * 0.5, 1);
     drawHFStyleBlobReplica('', b2.x, b2.y, NUCLEUS_DROP_BASE_SIZE * 0.74 * 0.8 * 0.5, 1);
     drawingContext.restore();
